@@ -4,13 +4,13 @@
 
 #include "AVL-tree.h"
 
-AVLNode::AVLNode(int v) {
+template <std::totally_ordered T> AVLNode<T>::AVLNode(T v) {
   this->value = v;
   this->left = nullptr;
   this->right = nullptr;
 }
 
-int AVLNode::height() {
+template <std::totally_ordered T> int AVLNode<T>::height() {
   if (nullptr == this)
     return 0;
   std::queue<AVLNode *> q;
@@ -32,45 +32,49 @@ int AVLNode::height() {
   return height;
 }
 
-int AVLNode::balance() { return this->right->height() - this->left->height(); }
+template <std::totally_ordered T> int AVLNode<T>::balance() {
+  return this->right->height() - this->left->height();
+}
 
 // return 1 if node is balanced
 // return 0 otherwise
-int AVLNode::isBalanced() { return abs(this->balance()) <= 1; }
+template <std::totally_ordered T> bool AVLNode<T>::isBalanced() {
+  return abs(this->balance()) <= 1;
+}
 
 // fixes a node if it is not balanced
 // does nothing otherwise
-void AVLNode::fixNode() {
+template <std::totally_ordered T> void AVLNode<T>::fixNode() {
   if (this->isBalanced())
     return;
   int b = this->balance();
 }
 
-AVLNode *AVLNode::rightRotate() {
-  AVLNode *right_child_of_left_child = this->left;
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::rightRotate() {
+  AVLNode<T> *right_child_of_left_child = this->left;
   this->left = right_child_of_left_child->right;
   right_child_of_left_child->right = this;
   return right_child_of_left_child;
 }
 
-AVLNode *AVLNode::leftRotate() {
-  AVLNode *left_child_of_right_child = this->right;
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::leftRotate() {
+  AVLNode<T> *left_child_of_right_child = this->right;
   this->right = left_child_of_right_child->left;
   left_child_of_right_child->left = this;
   return left_child_of_right_child;
 }
 
-AVLNode *AVLNode::doubleRightRotate() {
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::doubleRightRotate() {
   this->right->leftRotate();
   return this->rightRotate();
 }
 
-AVLNode *AVLNode::doubleLeftRotate() {
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::doubleLeftRotate() {
   this->left->rightRotate();
   return this->leftRotate();
 }
 
-AVLNode *AVLNode::fixupDeletion() {
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::fixupDeletion() {
   int bal = this->balance();
 
   if (bal > 1 && this->right->balance() >= 0)
@@ -88,24 +92,24 @@ AVLNode *AVLNode::fixupDeletion() {
   return this;
 }
 
-AVLNode *AVLNode::removeSuccessor() {
-  std::stack<AVLNode *> s;
-  AVLNode *current = this->right;
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::removeSuccessor() {
+  std::stack<AVLNode<T> *> s;
+  AVLNode<T> *current = this->right;
   while (current->left != nullptr) {
     s.push(current);
     current = current->left;
   }
   this->value = current->value;
-  AVLNode *replacement = current->right;
+  AVLNode<T> *replacement = current->right;
   delete current;
   if (s.empty())
     return replacement;
-  AVLNode *parent = s.top();
+  AVLNode<T> *parent = s.top();
   parent->left = replacement;
   while (!s.empty()) {
     current = s.top();
     s.pop();
-    AVLNode *balancedNode = current->fixupDeletion();
+    AVLNode<T> *balancedNode = current->fixupDeletion();
     if (!s.empty()) {
       parent = s.top();
       if (parent->left == current)
@@ -120,9 +124,9 @@ AVLNode *AVLNode::removeSuccessor() {
 }
 
 // TODO: make this code more readable
-AVLNode *AVLNode::addNode(int v) {
-  std::stack<AVLNode *> s;
-  AVLNode *current = this;
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::addNode(int v) {
+  std::stack<AVLNode<T> *> s;
+  AVLNode<T> *current = this;
   while (current != nullptr) {
     s.push(current);
     if (current->value == v)
@@ -133,7 +137,7 @@ AVLNode *AVLNode::addNode(int v) {
       current = current->left;
   }
   current = s.top();
-  AVLNode *newNode = new AVLNode(v);
+  AVLNode<T> *newNode = new AVLNode<T>(v);
   if (current->value < v)
     current->right = newNode;
   else
@@ -142,7 +146,7 @@ AVLNode *AVLNode::addNode(int v) {
     current = s.top();
     s.pop();
     int balance = current->balance();
-    AVLNode *rotatedRoot = current;
+    AVLNode<T> *rotatedRoot = current;
     if (balance > 1 && v < current->left->value) {
       rotatedRoot = current->rightRotate();
     } else if (balance < -1 && v > current->right->value) {
@@ -155,7 +159,7 @@ AVLNode *AVLNode::addNode(int v) {
       rotatedRoot = current->leftRotate();
     }
     if (!s.empty()) {
-      AVLNode *parent = s.top();
+      AVLNode<T> *parent = s.top();
       if (parent->left == current) {
         parent->left = rotatedRoot;
       } else {
@@ -168,9 +172,9 @@ AVLNode *AVLNode::addNode(int v) {
   return nullptr;
 }
 
-AVLNode *AVLNode::deleteNode(int v) {
-  AVLNode *current = this;
-  std::stack<AVLNode *> s;
+template <std::totally_ordered T> AVLNode<T> *AVLNode<T>::deleteNode(int v) {
+  AVLNode<T> *current = this;
+  std::stack<AVLNode<T> *> s;
   s.push(current);
   while (current != nullptr && current->value != v) {
     s.push(current);
@@ -182,8 +186,8 @@ AVLNode *AVLNode::deleteNode(int v) {
   }
   if (current == nullptr)
     return this;
-  AVLNode *nodeToDelete = current;
-  AVLNode *replacement = nullptr;
+  AVLNode<T> *nodeToDelete = current;
+  AVLNode<T> *replacement = nullptr;
   if (nodeToDelete->left != nullptr && nodeToDelete->right != nullptr) {
     nodeToDelete->right = nodeToDelete->removeSuccessor();
     nodeToDelete = nullptr;
@@ -195,7 +199,7 @@ AVLNode *AVLNode::deleteNode(int v) {
       replacement = nodeToDelete->right;
     }
     if (!s.empty()) {
-      AVLNode *parent = s.top();
+      AVLNode<T> *parent = s.top();
       if (parent->left == nodeToDelete) {
         parent->left = replacement;
       } else {
@@ -211,7 +215,7 @@ AVLNode *AVLNode::deleteNode(int v) {
     current = s.top();
     s.pop();
     int balance = current->balance();
-    AVLNode *rotatedRoot = current;
+    AVLNode<T> *rotatedRoot = current;
 
     if (balance > 1) {
       if (current->left->balance() >= 0)
@@ -227,7 +231,7 @@ AVLNode *AVLNode::deleteNode(int v) {
     }
 
     if (!s.empty()) {
-      AVLNode *parent = s.top();
+      AVLNode<T> *parent = s.top();
       if (parent->left == current) {
         parent->left = rotatedRoot;
       } else {

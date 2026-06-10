@@ -1,10 +1,12 @@
-class AVLNode {
+#include <concepts>
+
+template <std::totally_ordered T> class AVLNode {
 public:
-  int value;
-  AVLNode(int v);
+  T value;
+  AVLNode(T v);
   int height();
   int balance();
-  int isBalanced();
+  bool isBalanced();
 
 private:
   AVLNode *left;
@@ -16,6 +18,6 @@ private:
   AVLNode *doubleLeftRotate();
   AVLNode *fixupDeletion();
   AVLNode *removeSuccessor();
-  AVLNode* addNode(int v);
+  AVLNode *addNode(int v);
   AVLNode *deleteNode(int v);
 };
