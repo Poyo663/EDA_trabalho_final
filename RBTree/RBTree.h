@@ -1,52 +1,53 @@
 #include <vector>
+#include <concepts>
 
 enum COLOR {
   RED = 0,
   BLACK = 1,
 };;
 
-class TreeNode {
+template <std::totally_ordered T> class TreeNode {
 public:
-  TreeNode();
-  TreeNode(TreeNode *p, TreeNode *left, TreeNode *right, int value,
-           enum COLOR color);
-  ~TreeNode() ;
-
+  T value;
   TreeNode *parent;
   TreeNode *left;
   TreeNode *right;
-  int value;
   enum COLOR color;
+  TreeNode();
+  TreeNode(TreeNode *p, TreeNode *left, TreeNode *right, T value,
+           enum COLOR color);
+  ~TreeNode() ;
+
 
 private:
 };
 
-class RBTree {
+template <std::totally_ordered T> class RBTree {
 public:
   RBTree();
-  RBTree(int value);
+  RBTree(T value);
   ~RBTree();
-  TreeNode* getTree();
-  TreeNode* getNil();
-  void addNode(int v);
-  void removeNode(int v);
-  TreeNode* search(int v);
-  TreeNode* getSuccessor(TreeNode* n);
-  TreeNode* getPredecessor(TreeNode* n);
+  TreeNode<T>* getTree();
+  TreeNode<T>* getNil();
+  void addNode(T v);
+  void removeNode(T v);
+  TreeNode<T>* search(T v);
+  TreeNode<T>* getSuccessor(TreeNode<T>* n);
+  TreeNode<T>* getPredecessor(TreeNode<T>* n);
   int size();
-  int minimum();
-  int maximum();
-  std::vector<int>* getKeys();
+  T minimum();
+  T maximum();
+  std::vector<T>* getKeys();
 private:
-  TreeNode* root;
-  TreeNode* NIL;
+  TreeNode<T>* root;
+  TreeNode<T>* NIL;
 
 
-  void fixInsertionColor(TreeNode* novo);
-  void rightRotate(TreeNode *n);
-  void leftRotate(TreeNode *n);
-  void remove(TreeNode* n);
-  void fixDeletionColor(TreeNode* n);
-  int sizeHelper(TreeNode* n);
+  void fixInsertionColor(TreeNode<T>* novo);
+  void rightRotate(TreeNode<T> *n);
+  void leftRotate(TreeNode<T> *n);
+  void remove(TreeNode<T>* n);
+  void fixDeletionColor(TreeNode<T>* n);
+  int sizeHelper(TreeNode<T>* n);
 };
 
