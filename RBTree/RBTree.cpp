@@ -1,342 +1,217 @@
 #include "RBTree.h"
-#include <stack>
-#include <stdlib.h>
-#include <vector>
 
-template <std::totally_ordered T> TreeNode<T>::TreeNode() {
-  this->parent = nullptr;
-  this->left = nullptr;
-  this->right = nullptr;
-  this->value = 0;
-  this->color = BLACK;
+template <typename T> Color RedBlackTree<T>::getColor(Node<T> *n) {
+  return n ? n->color : BLACK;
 }
 
-template <std::totally_ordered T>
-TreeNode<T>::TreeNode(TreeNode<T> *p, TreeNode<T> *left, TreeNode<T> *right,
-                      T value, enum COLOR color) {
-  this->parent = p;
-  this->left = left;
-  this->right = right;
-  this->value = value;
-  this->color = color;
+template <typename T> void RedBlackTree<T>::setColor(Node<T> *n, Color c) {
+  if (n) {
+    this->color_changes++;
+    n->color = c;
+  }
 }
 
-template <std::totally_ordered T> TreeNode<T>::~TreeNode() {
-  delete this->left;
-  delete this->right;
+template <typename T> Node<T> *RedBlackTree<T>::rotateLeft(Node<T> *x) {
+  this->rotations++;
+  Node<T> *y = x->right;
+  x->right = y->left;
+  y->left = x;
+  return y;
 }
 
-template <std::totally_ordered T> RBTree<T>::RBTree() {
-  this->NIL = new TreeNode<T>(nullptr, nullptr, nullptr, -1, BLACK);
-  this->root = this->NIL;
+template <typename T> Node<T> *RedBlackTree<T>::rotateRight(Node<T> *y) {
+  this->rotations++;
+  Node<T> *x = y->left;
+  y->left = x->right;
+  x->right = y;
+  return x;
 }
 
-template <std::totally_ordered T> RBTree<T>::RBTree(T value) {
-  this->NIL = new TreeNode<T>(nullptr, nullptr, nullptr, -1, BLACK);
-  this->root = new TreeNode<T>(this->NIL, this->NIL, this->NIL, value, BLACK);
+template <typename T>
+void RedBlackTree<T>::connectToParent(Node<T> *parent, Node<T> *oldChild,
+                                      Node<T> *newChild) {
+  if (!parent) {
+    root = newChild;
+  } else if (parent->left == oldChild) {
+    parent->left = newChild;
+  } else {
+    parent->right = newChild;
+  }
 }
 
-template <std::totally_ordered T> RBTree<T>::~RBTree() {
-  delete this->root;
-  this->NIL = new TreeNode<T>(nullptr, nullptr, nullptr, -1, BLACK);
+template <typename T> RedBlackTree<T>::~RedBlackTree() {
+  if (!root)
+    return;
+  std::stack<Node<T> *> s;
+  s.push(root);
+  while (!s.empty()) {
+    Node<T> *curr = s.top();
+    s.pop();
+    if (curr->left)
+      s.push(curr->left);
+    if (curr->right)
+      s.push(curr->right);
+    delete curr;
+  }
 }
 
-template <std::totally_ordered T> TreeNode<T> *RBTree<T>::getTree() {
-  return this->root;
-}
+template <typename T> void RedBlackTree<T>::insert(T key) {
+  Node<T> *newNode = new Node<T>(key);
+  if (!root) {
+    root = newNode;
+    root->color = BLACK;
+    return;
+  }
 
-template <std::totally_ordered T> TreeNode<T> *RBTree<T>::getNil() {
-  return this->NIL;
-}
+  std::stack<Node<T> *> path;
+  Node<T> *curr = root;
 
-template <std::totally_ordered T> void RBTree<T>::rightRotate(TreeNode<T> *n) {
-  TreeNode<T> *right_child_of_left_child = n->left;
-  n->left = right_child_of_left_child->right;
-  if (right_child_of_left_child->right != this->NIL)
-    right_child_of_left_child->left->parent = n;
-  right_child_of_left_child->parent = n->parent;
-  if (n->parent == this->NIL)
-    this->root = right_child_of_left_child;
-  else if (n == n->parent->left)
-    n->parent->left = right_child_of_left_child;
-  else
-    n->parent->left = right_child_of_left_child;
-  right_child_of_left_child->left = n;
-  n->parent = right_child_of_left_child;
-}
+  while (curr) {
+    path.push(curr);
+    this->comparisons += 1;
+    if (key < curr->data) {
+      this->comparisons += 1;
+      if (!curr->left) {
+        curr->left = newNode;
+        break;
+      }
+      curr = curr->left;
+    } else if (key > curr->data) {
+      this->comparisons += 3;
+      if (!curr->right) {
+        curr->right = newNode;
+        break;
+      }
+      curr = curr->right;
+    } else {
+      this->comparisons += 2;
+      delete newNode;
+      return;
+    }
+  }
 
-template <std::totally_ordered T> void RBTree<T>::leftRotate(TreeNode<T> *n) {
-  TreeNode<T> *right_child_of_right_child = n->right;
-  n->right = right_child_of_right_child->right;
-  if (right_child_of_right_child->right != this->NIL)
-    right_child_of_right_child->right->parent = n;
-  right_child_of_right_child->parent = n->parent;
-  if (n->parent == this->NIL)
-    this->root = right_child_of_right_child;
-  else if (n == n->parent->right)
-    n->parent->right = right_child_of_right_child;
-  else
-    n->parent->right = right_child_of_right_child;
-  right_child_of_right_child->right = n;
-  n->parent = right_child_of_right_child;
-}
+  Node<T> *z = newNode;
 
-template <std::totally_ordered T>
-void RBTree<T>::fixInsertionColor(TreeNode<T> *novo) {
-  TreeNode<T> *parent = nullptr;
-  TreeNode<T> *grandparent = nullptr;
+  while (!path.empty() && getColor(path.top()) == RED) {
+    Node<T> *p = path.top();
+    path.pop();
 
-  while ((novo != root) && (novo->color != BLACK) &&
-         (novo->parent->color == RED)) {
-    parent = novo->parent;
-    grandparent = novo->parent->parent;
-    if (parent == grandparent->left) {
-      TreeNode<T> *uncle = grandparent->right;
+    if (path.empty())
+      break;
+    Node<T> *g = path.top();
+    path.pop();
 
-      if (uncle != nullptr && uncle->color == RED) {
-        grandparent->color = RED;
-        parent->color = BLACK;
-        uncle->color = BLACK;
-        novo = grandparent;
+    Node<T> *gg = path.empty() ? nullptr : path.top();
+
+    this->comparisons += 1;
+    if (p == g->left) {
+      Node<T> *u = g->right;
+
+      this->comparisons += 1;
+      if (getColor(u) == RED) {
+        setColor(p, BLACK);
+        setColor(u, BLACK);
+        setColor(g, RED);
+        z = g;
+        if (gg)
+          path.push(gg);
       } else {
-        if (novo == parent->right) {
-          leftRotate(parent);
-          novo = parent;
-          parent = novo->parent;
+        this->comparisons += 1;
+        if (z == p->right) {
+          p = rotateLeft(p);
+          g->left = p;
         }
-        rightRotate(grandparent);
-        std::swap(parent->color, grandparent->color);
-        novo = parent;
+        setColor(p, BLACK);
+        setColor(g, RED);
+        Node<T> *newSubRoot = rotateRight(g);
+        connectToParent(gg, g, newSubRoot);
+        break;
       }
     } else {
-      TreeNode<T> *uncle = grandparent->left;
+      Node<T> *u = g->left;
 
-      if (uncle != nullptr && uncle->color == RED) {
-        grandparent->color = RED;
-        parent->color = BLACK;
-        uncle->color = BLACK;
-        novo = grandparent;
+      this->comparisons += 1;
+      if (getColor(u) == RED) {
+        setColor(p, BLACK);
+        setColor(u, BLACK);
+        setColor(g, RED);
+        z = g;
+        if (gg)
+          path.push(gg);
       } else {
-        if (novo == parent->left) {
-          rightRotate(parent);
-          novo = parent;
-          parent = novo->parent;
+        this->comparisons += 1;
+        if (z == p->left) {
+          p = rotateRight(p);
+          g->right = p;
         }
-        leftRotate(grandparent);
-        std::swap(parent->color, grandparent->color);
-        novo = parent;
+        setColor(p, BLACK);
+        setColor(g, RED);
+        Node<T> *newSubRoot = rotateLeft(g);
+        connectToParent(gg, g, newSubRoot);
+        break;
       }
     }
   }
   root->color = BLACK;
 }
 
-template <std::totally_ordered T> TreeNode<T> *RBTree<T>::search(T v) {
-  TreeNode<T> *n = this->root;
-  while (n != this->NIL) {
-    if (v < n->value)
-      n = n->left;
-    else if (v > n->value)
-      n = n->right;
+template <typename T> bool RedBlackTree<T>::search(T key) {
+  Node<T> *curr = root;
+  while (curr) {
+    if (key == curr->data)
+      return true;
+    else if (key < curr->data)
+      curr = curr->left;
     else
-      return n;
+      curr = curr->right;
   }
-  return nullptr;
+  return false;
 }
 
-template <std::totally_ordered T> void RBTree<T>::addNode(T v) {
-  if (this->root == this->NIL) {
-    this->root = new TreeNode<T>(this->NIL, this->NIL, this->NIL, v, BLACK);
-  }
-  TreeNode<T> *n = this->root;
-  TreeNode<T> *y = this->NIL;
-  while (n != this->NIL) {
-    y = n;
-    if (v < n->value)
-      n = n->left;
-    else if (v > n->value)
-      n = n->right;
-    else
-      return;
-  }
-  TreeNode<T> *ans = new TreeNode<T>();
-  ans->parent = y;
-  ans->value = v;
-  if (y == this->NIL)
-    this->root = ans;
-  else if (v < y->value)
-    y->left = ans;
-  else
-    y->right = ans;
-  ans->left = this->NIL;
-  ans->right = this->NIL;
-  ans->color = RED;
-  if (y->color == RED)
-    this->fixInsertionColor(ans);
-}
-
-template <std::totally_ordered T> void RBTree<T>::removeNode(T v) {
-  if (this->root == this->NIL) {
+template <typename T> void RedBlackTree<T>::print() {
+  if (!root)
     return;
-  }
-  TreeNode<T> *n = this->search(v);
-  if (n == nullptr)
-    return;
-  this->remove(n);
-}
+  std::stack<Node<T> *> s;
+  Node<T> *curr = root;
 
-template <std::totally_ordered T> void RBTree<T>::remove(TreeNode<T> *n) {
-  if (n->right != this->NIL && n->left != this->NIL) {
-    TreeNode<T> *m = n;
-    n = this->getSuccessor(n);
-    T a = m->value;
-    m->value = n->value;
-    n->value = a;
-  }
-
-  TreeNode<T> *child = n->left != this->NIL ? n->left : n->right;
-  child->parent = n->parent;
-  n == n->parent->right ? n->parent->right = child : n->parent->left = child;
-  if (n->color == BLACK && child->color == RED)
-    child->color = BLACK;
-  n->left = nullptr;
-  n->right = nullptr;
-  if (!(n->color == BLACK && child->color == BLACK))
-    return delete n;
-  delete n;
-  this->fixDeletionColor(child);
-}
-
-template <std::totally_ordered T>
-TreeNode<T> *RBTree<T>::getSuccessor(TreeNode<T> *n) {
-  TreeNode<T> *current = n->right;
-  while (current->left != this->NIL) {
-    current = current->left;
-  }
-  return current;
-}
-
-template <std::totally_ordered T>
-TreeNode<T> *RBTree<T>::getPredecessor(TreeNode<T> *n) {
-  TreeNode<T> *current = n->left;
-  while (current->right != this->NIL) {
-    current = current->right;
-  }
-  return current;
-}
-
-template <std::totally_ordered T>
-void RBTree<T>::fixDeletionColor(TreeNode<T> *n) {
-  while (n != root && n->color == BLACK) {
-    if (n == n->parent->left) {
-      TreeNode<T> *sibling = n->parent->right;
-      if (sibling->color == RED) {
-        sibling->color = BLACK;
-        n->parent->color = RED;
-        this->leftRotate(n->parent);
-        sibling = n->parent->right;
-      }
-
-      if (sibling->left->color == BLACK && sibling->right->color == BLACK) {
-        sibling->color = RED;
-        n = n->parent;
-      } else {
-        if (sibling->right->color == BLACK) {
-          sibling->left->color = BLACK;
-          sibling->color = RED;
-          this->rightRotate(sibling);
-          sibling = n->parent->right;
-        }
-        sibling->color = n->parent->color;
-        n->parent->color = BLACK;
-        sibling->right->color = BLACK;
-        this->leftRotate(n->parent);
-        n = root;
-      }
-    } else {
-      TreeNode<T> *sibling = n->parent->left;
-      if (sibling->color == RED) {
-        sibling->color = BLACK;
-        n->parent->color = RED;
-        this->rightRotate(n->parent);
-        sibling = n->parent->left;
-      }
-
-      if (sibling->right->color == BLACK && sibling->left->color == BLACK) {
-        sibling->color = RED;
-        n = n->parent;
-      }
-      else {
-        if (sibling->left->color == BLACK) {
-          sibling->right->color = BLACK;
-          sibling->color = RED;
-          this->leftRotate(sibling);
-          sibling = n->parent->left;
-        }
-        sibling->color = n->parent->color;
-        n->parent->color = BLACK;
-        sibling->left->color = BLACK;
-        this->rightRotate(n->parent);
-        n = root;
-      }
+  while (curr || !s.empty()) {
+    while (curr) {
+      s.push(curr);
+      curr = curr->left;
     }
-  }
-  n->color = BLACK;
-}
-
-template <std::totally_ordered T> T RBTree<T>::minimum() {
-  TreeNode<T> *current = this->root;
-  while (current->left != this->NIL) {
-    current = current->left;
-  }
-  return current->value;
-}
-
-template <std::totally_ordered T> T RBTree<T>::maximum() {
-  TreeNode<T> *current = this->root;
-  while (current->right != this->NIL) {
-    current = current->right;
-  }
-  return current->value;
-}
-
-template <std::totally_ordered T> int RBTree<T>::size() {
-  return this->sizeHelper(this->root);
-}
-
-template <std::totally_ordered T> int RBTree<T>::sizeHelper(TreeNode<T> *n) {
-  int resp = 0;
-  std::stack<TreeNode<T> *> next;
-  next.push(this->root);
-  TreeNode<T> *current = next.top();
-  while (!next.empty()) {
-    resp++;
-    next.pop();
-    if (current->right != this->getNil())
-      next.push(current->right);
-    if (current->left != this->getNil())
-      next.push(current->left);
-    TreeNode<T> *current = next.top();
-  }
-  return resp;
-}
-
-template <std::totally_ordered T> std::vector<T> *RBTree<T>::getKeys() {
-  std::vector<T> *v = new std::vector<T>();
-  if (this->root == this->NIL)
-    return v;
-  std::stack<TreeNode<T> *> s;
-  s.push(this->root);
-  while (!s.empty()) {
-    if (s.top() == this->NIL) {
-      s.pop();
-      continue;
-    }
-    TreeNode<T> *temp = s.top();
-    v->push_back(temp->value);
+    curr = s.top();
     s.pop();
-    s.push(temp->right);
-    s.push(temp->left);
+    std::cout << curr->data << "(" << (curr->color == RED ? "V" : "P") << ") ";
+    curr = curr->right;
   }
-  return v;
+  std::cout << std::endl;
 }
+
+// int main() {
+//   std::cout << "--- RBT de Inteiros ---" << std::endl;
+//   RedBlackTree<int> rbtInt;
+//
+//   int arr[] = {10, 20, 30, 15, 25, 5};
+//   for (int x : arr) {
+//     rbtInt.insert(x);
+//   }
+//
+//   std::cout << "Árvore em ordem [Valor(Cor: V=Vermelho, P=Preto)]:"
+//             << std::endl;
+//   rbtInt.print();
+//
+//   std::cout << "\n--- RBT de Strings ---" << std::endl;
+//   RedBlackTree<std::string> rbtString;
+//   rbtString.insert("Estruturas");
+//   rbtString.insert("De");
+//   rbtString.insert("Dados");
+//   rbtString.insert("Avancadas");
+//
+//   rbtString.print();
+//
+//   std::cout << "Buscar 'Dados': "
+//             << (rbtString.search("Dados") ? "Encontrado" : "Não encontrado")
+//             << std::endl;
+//
+//   return 0;
+// }

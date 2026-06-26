@@ -1,23 +1,45 @@
-#include <concepts>
+#include <algorithm>
+#include <iostream>
+#include <stack>
 
-template <std::totally_ordered T> class AVLNode {
-public:
-  T value;
-  AVLNode(T v);
-  int height();
-  int balance();
-  bool isBalanced();
+template <typename T> struct Node {
+  T data;
+  int height;
+  Node *left;
+  Node *right;
 
+  Node(T val) {
+    this->data = val;
+    this->height = 1;
+    this->left = nullptr;
+    this->right = nullptr;
+  }
+};
+
+template <typename T> class AVLTree {
 private:
-  AVLNode *left;
-  AVLNode *right;
-  void fixNode();
-  AVLNode *rightRotate();
-  AVLNode *leftRotate();
-  AVLNode *doubleRightRotate();
-  AVLNode *doubleLeftRotate();
-  AVLNode *fixupDeletion();
-  AVLNode *removeSuccessor();
-  AVLNode *addNode(int v);
-  AVLNode *deleteNode(int v);
+  Node<T> *root;
+
+  int height(Node<T> *n);
+  void updateHeight(Node<T> *n);
+  int getBalance(Node<T> *n);
+  Node<T> *rotateRight(Node<T> *y);
+  Node<T> *rotateLeft(Node<T> *x);
+  Node<T> *balanceNode(Node<T> *subRoot);
+  void connectToParent(Node<T> *parent, Node<T> *oldChild, Node<T> *newChild);
+
+public:
+  unsigned int comparisons;
+  unsigned int rotations;
+
+  AVLTree() {
+    this->root = nullptr;
+    this->comparisons = 0;
+    this->rotations = 0;
+  }
+  ~AVLTree();
+  void insert(T key);
+  void remove(T key);
+  AVLTree<T>* search(T key);
+  void print();
 };
