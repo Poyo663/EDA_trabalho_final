@@ -44,29 +44,25 @@ template <typename T> Node<T> *AVLTree<T>::balanceNode(Node<T> *subRoot) {
   updateHeight(subRoot);
   int balance = getBalance(subRoot);
 
-  // Caso Esquerda-Esquerda (LL)
   if (balance > 1 && getBalance(subRoot->left) >= 0) {
     return rotateRight(subRoot);
   }
 
-  // Caso Esquerda-Direita (LR)
   if (balance > 1 && getBalance(subRoot->left) < 0) {
     subRoot->left = rotateLeft(subRoot->left);
     return rotateRight(subRoot);
   }
 
-  // Caso Direita-Direita (RR)
   if (balance < -1 && getBalance(subRoot->right) <= 0) {
     return rotateLeft(subRoot);
   }
 
-  // Caso Direita-Esquerda (RL)
   if (balance < -1 && getBalance(subRoot->right) > 0) {
     subRoot->right = rotateRight(subRoot->right);
     return rotateLeft(subRoot);
   }
 
-  return subRoot; // Não precisou de rotação
+  return subRoot; 
 }
 
 template <typename T>
@@ -107,7 +103,6 @@ template <typename T> void AVLTree<T>::insert(T key) {
   std::stack<Node<T> *> path;
   Node<T> *curr = root;
 
-  // Fase 1: Descida (BST padrão) guardando o caminho
   while (curr) {
     path.push(curr);
     if (key < curr->data) {
@@ -123,12 +118,11 @@ template <typename T> void AVLTree<T>::insert(T key) {
       }
       curr = curr->right;
     } else {
-      delete newNode; // Chave duplicada não é inserida
+      delete newNode; 
       return;
     }
   }
 
-  // Fase 2: Subida desempilhando e balanceando
   while (!path.empty()) {
     curr = path.top();
     path.pop();
@@ -147,7 +141,6 @@ template <typename T> void AVLTree<T>::remove(T key) {
   std::stack<Node<T> *> path;
   Node<T> *curr = root;
 
-  // Fase 1: Busca o nó a ser removido
   while (curr && curr->data != key) {
     path.push(curr);
     if (key < curr->data)
@@ -157,20 +150,17 @@ template <typename T> void AVLTree<T>::remove(T key) {
   }
 
   if (!curr)
-    return; // Chave não encontrada
+    return; 
 
-  // Fase 2: Substituição do nó (Casos de exclusão da BST)
   Node<T> *target = curr;
   Node<T> *child = nullptr;
 
   if (!target->left || !target->right) {
-    // Caso 0 ou 1 filho
     child = target->left ? target->left : target->right;
     Node<T> *parent = path.empty() ? nullptr : path.top();
     connectToParent(parent, target, child);
     delete target;
   } else {
-    // Caso 2 filhos: Encontrar o sucessor em ordem
     path.push(target);
     Node<T> *successor = target->right;
 
@@ -179,10 +169,8 @@ template <typename T> void AVLTree<T>::remove(T key) {
       successor = successor->left;
     }
 
-    // Copia o dado do sucessor para o nó alvo
     target->data = successor->data;
 
-    // O pai do sucessor agora aponta para o filho da direita do sucessor
     Node<T> *succParent = path.top();
     if (succParent == target) {
       succParent->right = successor->right;
@@ -193,7 +181,6 @@ template <typename T> void AVLTree<T>::remove(T key) {
     delete successor;
   }
 
-  // Fase 3: Subida recalculando a altura e rebalanceando
   while (!path.empty()) {
     curr = path.top();
     path.pop();
@@ -238,7 +225,6 @@ template <typename T> void AVLTree<T>::print() {
 }
 
 // int main() {
-//   // Exemplo 1: Árvore AVL de Inteiros
 //   std::cout << "--- AVL de Inteiros ---" << std::endl;
 //   AVLTree<int> intTree;
 //   intTree.insert(15);
@@ -247,7 +233,6 @@ template <typename T> void AVLTree<T>::print() {
 //   intTree.insert(5);
 //   intTree.print();
 //
-//   // Exemplo 2: Árvore AVL de Strings (Ordenação Alfabética)
 //   std::cout << "\n--- AVL de Strings ---" << std::endl;
 //   AVLTree<std::string> stringTree;
 //   stringTree.insert("C++");
@@ -255,7 +240,7 @@ template <typename T> void AVLTree<T>::print() {
 //   stringTree.insert("Python");
 //   stringTree.insert("Ada");
 //
-//   stringTree.print(); // Deve imprimir em ordem alfabética: Ada C++ Java Python
+//   stringTree.print(); 
 //
 //   std::cout << "Buscar 'Java': " << (stringTree.search("Java") ? "Sim" : "Não")
 //             << std::endl;
