@@ -15,6 +15,7 @@ template <typename T> int AVLTree<T>::getBalance(Node<T> *n) {
 }
 
 template <typename T> Node<T> *AVLTree<T>::rotateRight(Node<T> *y) {
+  this->rotations++;
   Node<T> *x = y->left;
   Node<T> *T2 = x->right;
 
@@ -28,6 +29,7 @@ template <typename T> Node<T> *AVLTree<T>::rotateRight(Node<T> *y) {
 }
 
 template <typename T> Node<T> *AVLTree<T>::rotateLeft(Node<T> *x) {
+  this->rotations++;
   Node<T> *y = x->right;
   Node<T> *T2 = y->left;
 
@@ -44,35 +46,42 @@ template <typename T> Node<T> *AVLTree<T>::balanceNode(Node<T> *subRoot) {
   updateHeight(subRoot);
   int balance = getBalance(subRoot);
 
+  this->comparisons += 2;
   if (balance > 1 && getBalance(subRoot->left) >= 0) {
     return rotateRight(subRoot);
   }
 
+  this->comparisons += 2;
   if (balance > 1 && getBalance(subRoot->left) < 0) {
     subRoot->left = rotateLeft(subRoot->left);
     return rotateRight(subRoot);
   }
 
+  this->comparisons += 2;
   if (balance < -1 && getBalance(subRoot->right) <= 0) {
     return rotateLeft(subRoot);
   }
 
+  this->comparisons += 2;
   if (balance < -1 && getBalance(subRoot->right) > 0) {
     subRoot->right = rotateRight(subRoot->right);
     return rotateLeft(subRoot);
   }
 
-  return subRoot; 
+  return subRoot;
 }
 
 template <typename T>
 void AVLTree<T>::connectToParent(Node<T> *parent, Node<T> *oldChild,
                                  Node<T> *newChild) {
   if (!parent) {
+    this->comparisons += 1;
     root = newChild;
   } else if (parent->left == oldChild) {
+    this->comparisons += 2;
     parent->left = newChild;
   } else {
+    this->comparisons += 2;
     parent->right = newChild;
   }
 }
@@ -95,6 +104,7 @@ template <typename T> AVLTree<T>::~AVLTree() {
 
 template <typename T> void AVLTree<T>::insert(T key) {
   Node<T> *newNode = new Node<T>(key);
+  this->comparisons += 1;
   if (!root) {
     root = newNode;
     return;
@@ -104,26 +114,32 @@ template <typename T> void AVLTree<T>::insert(T key) {
   Node<T> *curr = root;
 
   while (curr) {
+    this->comparisons += 2;
     path.push(curr);
     if (key < curr->data) {
+      this->comparisons += 1;
       if (!curr->left) {
         curr->left = newNode;
         break;
       }
       curr = curr->left;
     } else if (key > curr->data) {
+      this->comparisons += 2;
       if (!curr->right) {
         curr->right = newNode;
         break;
       }
       curr = curr->right;
     } else {
-      delete newNode; 
+      delete newNode;
       return;
     }
   }
+  // última comparação do while que não foi contada
+  this->comparisons += 1;
 
   while (!path.empty()) {
+    this->comparisons += 1;
     curr = path.top();
     path.pop();
 
@@ -132,9 +148,12 @@ template <typename T> void AVLTree<T>::insert(T key) {
 
     connectToParent(parent, curr, balanced);
   }
+  // última comparação do while que não foi contada
+  this->comparisons += 1;
 }
 
 template <typename T> void AVLTree<T>::remove(T key) {
+  this->comparisons += 1;
   if (!root)
     return;
 
@@ -142,15 +161,18 @@ template <typename T> void AVLTree<T>::remove(T key) {
   Node<T> *curr = root;
 
   while (curr && curr->data != key) {
+    this->comparisons += 2;
     path.push(curr);
     if (key < curr->data)
       curr = curr->left;
     else
       curr = curr->right;
   }
+  // última comparação do while que não foi contada
+  this->comparisons += 3;
 
   if (!curr)
-    return; 
+    return;
 
   Node<T> *target = curr;
   Node<T> *child = nullptr;
@@ -165,9 +187,12 @@ template <typename T> void AVLTree<T>::remove(T key) {
     Node<T> *successor = target->right;
 
     while (successor->left) {
+      this->comparisons += 1;
       path.push(successor);
       successor = successor->left;
     }
+    // última comparação do while que não foi contada
+    this->comparisons += 2;
 
     target->data = successor->data;
 
@@ -182,6 +207,7 @@ template <typename T> void AVLTree<T>::remove(T key) {
   }
 
   while (!path.empty()) {
+    this->comparisons += 1;
     curr = path.top();
     path.pop();
 
@@ -190,19 +216,21 @@ template <typename T> void AVLTree<T>::remove(T key) {
 
     connectToParent(parent, curr, balanced);
   }
+  // última comparação do while que não foi contada
+  this->comparisons += 1;
 }
 
-template <typename T> bool AVLTree<T>::search(T key) {
+template <typename T> AVLTree<T> *AVLTree<T>::search(T key) {
   Node<T> *curr = root;
   while (curr) {
     if (key == curr->data)
-      return true;
+      return curr;
     else if (key < curr->data)
       curr = curr->left;
     else
       curr = curr->right;
   }
-  return false;
+  return nullptr;
 }
 
 template <typename T> void AVLTree<T>::print() {
@@ -240,9 +268,10 @@ template <typename T> void AVLTree<T>::print() {
 //   stringTree.insert("Python");
 //   stringTree.insert("Ada");
 //
-//   stringTree.print(); 
+//   stringTree.print();
 //
-//   std::cout << "Buscar 'Java': " << (stringTree.search("Java") ? "Sim" : "Não")
+//   std::cout << "Buscar 'Java': " << (stringTree.search("Java") ? "Sim" :
+//   "Não")
 //             << std::endl;
 //
 //   return 0;

@@ -29,10 +29,17 @@ private:
   void connectToParent(Node<T> *parent, Node<T> *oldChild, Node<T> *newChild);
 
 public:
-  AVLTree() { this->root = nullptr; }
+  unsigned int comparisons;
+  unsigned int rotations;
+
+  AVLTree() {
+    this->root = nullptr;
+    this->comparisons = 0;
+    this->rotations = 0;
+  }
   ~AVLTree();
   void insert(T key);
   void remove(T key);
-  bool search(T key);
+  AVLTree<T>* search(T key);
   void print();
 };

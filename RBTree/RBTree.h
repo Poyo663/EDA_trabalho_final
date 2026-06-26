@@ -30,10 +30,18 @@ private:
   void connectToParent(Node<T> *parent, Node<T> *oldChild, Node<T> *newChild);
 
 public:
-  RedBlackTree() : root(nullptr) {}
+  unsigned int comparisons;
+  unsigned int rotations;
+  unsigned int color_changes;
+
+  RedBlackTree() {
+    this->root = nullptr;
+    this->comparisons = 0;
+    this->rotations = 0;
+    this->color_changes = 0;
+  }
   ~RedBlackTree();
   void insert(T key);
   bool search(T key);
   void print();
 };
-
