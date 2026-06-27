@@ -1,35 +1,36 @@
 #include "RBTree.h"
+#include <vector>
 
-template <typename T> Color RedBlackTree<T>::getColor(Node<T> *n) {
+template <typename T> Color RedBlackTree<T>::getColor(RBNode<T> *n) {
   return n ? n->color : BLACK;
 }
 
-template <typename T> void RedBlackTree<T>::setColor(Node<T> *n, Color c) {
+template <typename T> void RedBlackTree<T>::setColor(RBNode<T> *n, Color c) {
   if (n) {
     this->color_changes++;
     n->color = c;
   }
 }
 
-template <typename T> Node<T> *RedBlackTree<T>::rotateLeft(Node<T> *x) {
+template <typename T> RBNode<T> *RedBlackTree<T>::rotateLeft(RBNode<T> *x) {
   this->rotations++;
-  Node<T> *y = x->right;
+  RBNode<T> *y = x->right;
   x->right = y->left;
   y->left = x;
   return y;
 }
 
-template <typename T> Node<T> *RedBlackTree<T>::rotateRight(Node<T> *y) {
+template <typename T> RBNode<T> *RedBlackTree<T>::rotateRight(RBNode<T> *y) {
   this->rotations++;
-  Node<T> *x = y->left;
+  RBNode<T> *x = y->left;
   y->left = x->right;
   x->right = y;
   return x;
 }
 
 template <typename T>
-void RedBlackTree<T>::connectToParent(Node<T> *parent, Node<T> *oldChild,
-                                      Node<T> *newChild) {
+void RedBlackTree<T>::connectToParent(RBNode<T> *parent, RBNode<T> *oldChild,
+                                      RBNode<T> *newChild) {
   if (!parent) {
     root = newChild;
   } else if (parent->left == oldChild) {
@@ -42,10 +43,10 @@ void RedBlackTree<T>::connectToParent(Node<T> *parent, Node<T> *oldChild,
 template <typename T> RedBlackTree<T>::~RedBlackTree() {
   if (!root)
     return;
-  std::stack<Node<T> *> s;
+  std::stack<RBNode<T> *> s;
   s.push(root);
   while (!s.empty()) {
-    Node<T> *curr = s.top();
+    RBNode<T> *curr = s.top();
     s.pop();
     if (curr->left)
       s.push(curr->left);
@@ -56,55 +57,55 @@ template <typename T> RedBlackTree<T>::~RedBlackTree() {
 }
 
 template <typename T> void RedBlackTree<T>::insert(T key) {
-  Node<T> *newNode = new Node<T>(key);
+  RBNode<T> *newRBNode = new RBNode<T>(key);
   if (!root) {
-    root = newNode;
+    root = newRBNode;
     root->color = BLACK;
     return;
   }
 
-  std::stack<Node<T> *> path;
-  Node<T> *curr = root;
+  std::stack<RBNode<T> *> path;
+  RBNode<T> *curr = root;
 
   while (curr) {
     path.push(curr);
     this->comparisons += 1;
     if (key < curr->data) {
       if (!curr->left) {
-        curr->left = newNode;
+        curr->left = newRBNode;
         break;
       }
       curr = curr->left;
     } else if (key > curr->data) {
       this->comparisons += 2;
       if (!curr->right) {
-        curr->right = newNode;
+        curr->right = newRBNode;
         break;
       }
       curr = curr->right;
     } else {
       this->comparisons += 2;
       curr->n++;
-      delete newNode;
+      delete newRBNode;
       return;
     }
   }
 
-  Node<T> *z = newNode;
+  RBNode<T> *z = newRBNode;
 
   while (!path.empty() && getColor(path.top()) == RED) {
-    Node<T> *p = path.top();
+    RBNode<T> *p = path.top();
     path.pop();
 
     if (path.empty())
       break;
-    Node<T> *g = path.top();
+    RBNode<T> *g = path.top();
     path.pop();
 
-    Node<T> *gg = path.empty() ? nullptr : path.top();
+    RBNode<T> *gg = path.empty() ? nullptr : path.top();
 
     if (p == g->left) {
-      Node<T> *u = g->right;
+      RBNode<T> *u = g->right;
 
       if (getColor(u) == RED) {
         setColor(p, BLACK);
@@ -120,12 +121,12 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
         }
         setColor(p, BLACK);
         setColor(g, RED);
-        Node<T> *newSubRoot = rotateRight(g);
+        RBNode<T> *newSubRoot = rotateRight(g);
         connectToParent(gg, g, newSubRoot);
         break;
       }
     } else {
-      Node<T> *u = g->left;
+      RBNode<T> *u = g->left;
 
       if (getColor(u) == RED) {
         setColor(p, BLACK);
@@ -141,7 +142,7 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
         }
         setColor(p, BLACK);
         setColor(g, RED);
-        Node<T> *newSubRoot = rotateLeft(g);
+        RBNode<T> *newSubRoot = rotateLeft(g);
         connectToParent(gg, g, newSubRoot);
         break;
       }
@@ -150,24 +151,24 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
   root->color = BLACK;
 }
 
-template <typename T> bool RedBlackTree<T>::search(T key) {
-  Node<T> *curr = root;
+template <typename T> RBNode<T>* RedBlackTree<T>::search(T key) {
+  RBNode<T> *curr = root;
   while (curr) {
     if (key == curr->data)
-      return true;
+      return curr;
     else if (key < curr->data)
       curr = curr->left;
     else
       curr = curr->right;
   }
-  return false;
+  return nullptr;
 }
 
 template <typename T> void RedBlackTree<T>::print() {
   if (!root)
     return;
-  std::stack<Node<T> *> s;
-  Node<T> *curr = root;
+  std::stack<RBNode<T> *> s;
+  RBNode<T> *curr = root;
 
   while (curr || !s.empty()) {
     while (curr) {
@@ -176,10 +177,31 @@ template <typename T> void RedBlackTree<T>::print() {
     }
     curr = s.top();
     s.pop();
-    std::cout << curr->data << "(" << (curr->color == RED ? "V" : "P") << ") ";
+    std::cout << curr->data << ": " << curr->n << std::endl;
     curr = curr->right;
   }
   std::cout << std::endl;
+}
+
+template <typename T> std::vector<T> RedBlackTree<T>::getKeys() {
+  std::stack<RBNode<T> *> s;
+  std::vector<T> v;
+  if (!root)
+    return v;
+
+  RBNode<T> *curr = root;
+
+  while (curr || !s.empty()) {
+    while (curr) {
+      s.push(curr);
+      curr = curr->left;
+    }
+    curr = s.top();
+    s.pop();
+    v.push_back(curr->data);
+    curr = curr->right;
+  }
+  return v;
 }
 
 // int main() {

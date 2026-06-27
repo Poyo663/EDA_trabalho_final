@@ -1,3 +1,6 @@
+#ifndef WORDS
+#define WORDS
+
 #include <string>
 class Word {
 public:
@@ -7,3 +10,5 @@ public:
 private:
   std::string word;
 };
+
+#endif

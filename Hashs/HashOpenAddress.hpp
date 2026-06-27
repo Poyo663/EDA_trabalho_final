@@ -1,6 +1,8 @@
 #ifndef HASH_OPEN_ADDRESS_HPP
 #define HASH_OPEN_ADDRESS_HPP
 
+#include <algorithm>
+#include <iostream>
 #include<vector>
 #include <cmath>
 #include <functional>
@@ -276,6 +278,27 @@ class HashOpenAddress : public Dictionary<K, V>{
 
     void resetMetrics() override {
         this->keyComparisons = 0;
+    }
+
+    void print(){
+      for(int i = 0; i < this->content.size(); i++){
+        Entry<K, V> e = this->content.at(i);
+        if(e.stats == ACTIVE){
+          std::cout << e.key << ": " << e.value << std::endl;
+        }
+      }
+    }
+
+    std::vector<K> getKeys(){
+      std::vector<K> v;
+      for(int i = 0; i < this->content.size(); i++){
+        Entry<K, V> e = this->content.at(i);
+        if(e.stats == ACTIVE){
+          v.push_back(e.key);
+        }
+      }
+      std::sort(v.begin(), v.end());
+      return v;
     }
 
     
