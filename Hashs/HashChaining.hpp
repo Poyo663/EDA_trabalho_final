@@ -1,6 +1,8 @@
 #ifndef HASH_CHAINING_HPP
 #define HASH_CHAINING_HPP
 
+#include <algorithm>
+#include <iostream>
 #include<vector>
 #include <cmath>
 #include <functional>
@@ -11,12 +13,12 @@
 
 
 template<typename K, typename V >
-struct Node{
+struct ChainNode{
     K key;
     V value;
-    Node<K, V>* next = nullptr;
+    ChainNode<K, V>* next = nullptr;
 
-    Node(K key, V value){
+    ChainNode(K key, V value){
         this->key = key;
         this->value = value;
     }
@@ -33,7 +35,7 @@ private:
 
     Hash hasher;
 
-    std::vector<Node<K, V>*> content;
+    std::vector<ChainNode<K, V>*> content;
 
     bool isPrime(int n) const{
             if(n <= 1) return false;
@@ -66,7 +68,7 @@ private:
 
         void reHashing(){
             int oldCapacity = this->capacity;
-            std::vector<Node<K,V>*> oldContent = this->content;
+            std::vector<ChainNode<K,V>*> oldContent = this->content;
 
             this->capacity = searchPrime(capacity*2);
 
@@ -77,12 +79,12 @@ private:
 
             for(int i = 0; i < oldCapacity;i++){
                 if(oldContent[i] != nullptr){
-                    Node<K, V>* current = oldContent[i];
+                    ChainNode<K, V>* current = oldContent[i];
 
                     while (current != nullptr)
                     {
                         add(current->key, current->value);
-                        Node<K, V>* toDelete = current;
+                        ChainNode<K, V>* toDelete = current;
                         current = current->next;
                         delete toDelete;
                     }
@@ -120,7 +122,7 @@ public:
 
         size_t index = hash(key);
 
-        Node<K,V>* current = content[index];
+        ChainNode<K,V>* current = content[index];
 
         while (current != nullptr){
             this->keyComparisons += 1;
@@ -132,7 +134,7 @@ public:
             current = current->next;
         }
 
-        Node<K,V>* newNode = new Node<K,V>(key, value);
+        ChainNode<K,V>* newNode = new ChainNode<K,V>(key, value);
         newNode->next = content[index];
         content[index] = newNode;
         count++;
@@ -142,7 +144,7 @@ public:
     bool modify(const K& key, const V& newValue) override {
         size_t index = hash(key);
 
-        Node<K, V>* current = content[index];
+        ChainNode<K, V>* current = content[index];
 
         while (current != nullptr)
         {
@@ -160,7 +162,7 @@ public:
     bool contains(const K& key) override {
         size_t index = hash(key);
 
-        Node<K, V>* current = content[index];
+        ChainNode<K, V>* current = content[index];
 
         while (current != nullptr)
         {
@@ -181,7 +183,7 @@ public:
     V get(const K& key) override {
         int index = hash(key);
 
-        Node<K, V>* current = content[index];
+        ChainNode<K, V>* current = content[index];
 
         while (current != nullptr)
         {
@@ -198,9 +200,9 @@ public:
     bool remove(const K& key) override {
         int index = hash(key);
 
-        Node<K, V>* current = content[index];
+        ChainNode<K, V>* current = content[index];
 
-        Node<K, V>* previous = nullptr;
+        ChainNode<K, V>* previous = nullptr;
 
         while (current != nullptr)
         {
@@ -242,10 +244,10 @@ public:
 
     void clear() override {
         for(int i = 0; i < capacity; i++){
-            Node<K, V>* current = content[i];
+            ChainNode<K, V>* current = content[i];
             while (current != nullptr)
             {
-                Node<K, V>* toDelete = current;
+                ChainNode<K, V>* toDelete = current;
                 current = current->next;
                 delete toDelete;
             }
@@ -256,6 +258,29 @@ public:
 
     ~HashChaining() override {
         clear();
+    }
+
+    void print(){
+      for(int i = 0; i < this->content.size(); i++){
+        ChainNode<K, V>* e = this->content.at(i);
+        while(e != nullptr){
+          std::cout << e->key << ": " << e->value << std::endl;
+          e = e->next;
+        }
+      }
+    }
+    
+    std::vector<K> getKeys(){
+      std::vector<K> v;
+      for(int i = 0; i < this->content.size(); i++){
+        ChainNode<K, V>* e = this->content.at(i);
+        while(e != nullptr){
+          v.push_back(e->key);
+          e = e->next;
+        }
+      }
+      std::sort(v.begin(), v.end());
+      return v;
     }
 };
 

@@ -1,15 +1,21 @@
+#ifndef AVL
+#define AVL
+
 #include <algorithm>
 #include <iostream>
 #include <stack>
+#include <vector>
 
 template <typename T> struct Node {
   T data;
+  unsigned short n;
   int height;
   Node *left;
   Node *right;
 
   Node(T val) {
     this->data = val;
+    this->n = 1;
     this->height = 1;
     this->left = nullptr;
     this->right = nullptr;
@@ -40,6 +46,10 @@ public:
   ~AVLTree();
   void insert(T key);
   void remove(T key);
-  AVLTree<T>* search(T key);
+  Node<T>* search(T key);
   void print();
+  std::vector<T> getKeys();
 };
+
+#include "AVL-tree.cpp"
+#endif 

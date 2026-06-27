@@ -1,4 +1,5 @@
 #include "AVL-tree.h"
+#include <vector>
 
 template <typename T> int AVLTree<T>::height(Node<T> *n) {
   return n ? n->height : 0;
@@ -123,6 +124,7 @@ template <typename T> void AVLTree<T>::insert(T key) {
       curr = curr->right;
     } else {
       this->comparisons += 2;
+      curr->n++;
       delete newNode;
       return;
     }
@@ -200,7 +202,7 @@ template <typename T> void AVLTree<T>::remove(T key) {
   }
 }
 
-template <typename T> AVLTree<T> *AVLTree<T>::search(T key) {
+template <typename T> Node<T> *AVLTree<T>::search(T key) {
   Node<T> *curr = root;
   while (curr) {
     if (key == curr->data)
@@ -226,10 +228,31 @@ template <typename T> void AVLTree<T>::print() {
     }
     curr = s.top();
     s.pop();
-    std::cout << curr->data << " ";
+    std::cout << curr->data << ": " << curr->n << std::endl;
     curr = curr->right;
   }
   std::cout << std::endl;
+}
+
+template <typename T> std::vector<T> AVLTree<T>::getKeys() {
+  std::stack<Node<T> *> s;
+  std::vector<T> v;
+  if (!root)
+    return v;
+
+  Node<T> *curr = root;
+
+  while (curr || !s.empty()) {
+    while (curr) {
+      s.push(curr);
+      curr = curr->left;
+    }
+    curr = s.top();
+    s.pop();
+    v.push_back(curr->data);
+    curr = curr->right;
+  }
+  return v;
 }
 
 // int main() {
