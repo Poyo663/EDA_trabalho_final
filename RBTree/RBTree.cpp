@@ -70,14 +70,13 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
     path.push(curr);
     this->comparisons += 1;
     if (key < curr->data) {
-      this->comparisons += 1;
       if (!curr->left) {
         curr->left = newNode;
         break;
       }
       curr = curr->left;
     } else if (key > curr->data) {
-      this->comparisons += 3;
+      this->comparisons += 2;
       if (!curr->right) {
         curr->right = newNode;
         break;
@@ -103,11 +102,9 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
 
     Node<T> *gg = path.empty() ? nullptr : path.top();
 
-    this->comparisons += 1;
     if (p == g->left) {
       Node<T> *u = g->right;
 
-      this->comparisons += 1;
       if (getColor(u) == RED) {
         setColor(p, BLACK);
         setColor(u, BLACK);
@@ -116,7 +113,6 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
         if (gg)
           path.push(gg);
       } else {
-        this->comparisons += 1;
         if (z == p->right) {
           p = rotateLeft(p);
           g->left = p;
@@ -130,7 +126,6 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
     } else {
       Node<T> *u = g->left;
 
-      this->comparisons += 1;
       if (getColor(u) == RED) {
         setColor(p, BLACK);
         setColor(u, BLACK);
@@ -139,7 +134,6 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
         if (gg)
           path.push(gg);
       } else {
-        this->comparisons += 1;
         if (z == p->left) {
           p = rotateRight(p);
           g->right = p;
