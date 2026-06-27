@@ -4,12 +4,14 @@
 
 template <typename T> struct Node {
   T data;
+  unsigned short n;
   int height;
   Node *left;
   Node *right;
 
   Node(T val) {
     this->data = val;
+    this->n = 1;
     this->height = 1;
     this->left = nullptr;
     this->right = nullptr;

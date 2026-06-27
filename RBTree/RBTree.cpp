@@ -84,6 +84,7 @@ template <typename T> void RedBlackTree<T>::insert(T key) {
       curr = curr->right;
     } else {
       this->comparisons += 2;
+      curr->n++;
       delete newNode;
       return;
     }

@@ -7,12 +7,14 @@ enum Color { RED, BLACK };
 
 template <typename T> struct Node {
   T data;
+  unsigned short n;
   Color color;
   Node *left;
   Node *right;
 
   Node(T val) {
     this->data = val;
+    this->n = 1;
     this->color = RED;
     this->left = nullptr;
     this->right = nullptr;
